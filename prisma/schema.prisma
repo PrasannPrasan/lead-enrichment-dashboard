@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id                    String        @id @default(cuid())
+  linkedinUrl           String        @unique
+  fullName              String?
+  currentCompany        String?
+  currentDesignation    String?
+  totalYearsExperience  Float?
+  emails                Json          @default("[]")
+  phones                Json          @default("[]")
+  workHistory           Json          @default("[]")
+  confidence            Json          @default("{}")
+  sources               Json          @default("{}")
+  totalCost             Float         @default(0)
+  isCached              Boolean       @default(false)
+  providerLogs          ProviderLog[]
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([createdAt])
+}
+
+model ProviderLog {
+  id              String   @id @default(cuid())
+  leadId          String?
+  lead            Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  provider        String
+  endpoint        String
+  success         Boolean
+  requestSummary  Json     @default("{}")
+  responseSummary Json     @default("{}")
+  fieldsReturned  Json     @default("[]")
+  cost            Float    @default(0)
+  error           String?
+  createdAt       DateTime @default(now())
+
+  @@index([provider, createdAt])
+  @@index([leadId])
+}
+
+model ProviderConfig {
+  id                       String   @id @default(cuid())
+  provider                 String   @unique
+  enabled                  Boolean  @default(true)
+  priority                 Int
+  costPerRequest           Float    @default(0)
+  costPerSuccessfulContact Float    @default(0)
+  dailyLimit               Float?
+  monthlyLimit             Float?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@index([enabled, priority])
+}
