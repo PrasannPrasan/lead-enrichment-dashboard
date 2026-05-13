@@ -55,12 +55,19 @@ Keep `MOCK_PROVIDER_MODE=true` locally if you want the MVP to return sample enri
 
 ```bash
 npm install
+npm run db:up
 npm run prisma:generate
 npm run prisma:migrate
 npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+For local Docker Postgres, use:
+
+```bash
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/lead_enrichment?schema=public"
+```
 
 ## Supabase Setup
 
