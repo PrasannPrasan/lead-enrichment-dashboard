@@ -17,7 +17,7 @@ A production-minded MVP for LinkedIn lead enrichment with a server-side provider
 
 - Enriches a LinkedIn profile URL from `/`.
 - Checks the database cache before calling providers.
-- Runs a configurable provider waterfall: Proxycurl, Apollo, Hunter, People Data Labs, then optional Twilio phone validation.
+- Runs a configurable provider waterfall: Apollo, Hunter, NinjaPear, People Data Labs, then optional Twilio phone validation.
 - Skips providers with missing API keys and logs the skip.
 - Supports local mock mode with deterministic demo data.
 - Tracks provider calls, returned fields, errors, cost, and budget skips.
@@ -35,6 +35,7 @@ NEXTAUTH_URL=
 ADMIN_EMAIL=
 ADMIN_PASSWORD=
 
+NINJAPEAR_API_KEY=
 PROXYCURL_API_KEY=
 APOLLO_API_KEY=
 HUNTER_API_KEY=
@@ -94,7 +95,9 @@ Admin routes require a NextAuth session. Provider API keys are only read from se
 
 ## Provider Notes
 
-The adapters normalize provider responses into the same lead shape. Real API calls are implemented for Proxycurl, Apollo, Hunter, PDL, and Twilio Lookup, but each provider API can evolve, so validate payload mappings against your provider plan before production spend.
+The adapters normalize provider responses into the same lead shape. Real API calls are implemented for Apollo, Hunter, NinjaPear, PDL, and Twilio Lookup, but each provider API can evolve, so validate payload mappings against your provider plan before production spend.
+
+NinjaPear is used through `NINJAPEAR_API_KEY`, with `PROXYCURL_API_KEY` kept as a backward-compatible fallback. NinjaPear's profile endpoint does not accept a LinkedIn URL alone; it runs when an earlier provider has supplied a work email, name plus employer, or role plus employer.
 
 Twilio is only used to validate a phone number that an enrichment provider already returned. It does not discover phone numbers.
 

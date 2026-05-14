@@ -1,5 +1,6 @@
 export type ProviderName =
   | "proxycurl"
+  | "ninjapear"
   | "apollo"
   | "hunter"
   | "pdl"

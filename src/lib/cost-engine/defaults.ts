@@ -2,18 +2,9 @@ import type { ProviderConfigInput } from "@/lib/types";
 
 export const DEFAULT_PROVIDER_CONFIGS: ProviderConfigInput[] = [
   {
-    provider: "proxycurl",
-    enabled: true,
-    priority: 1,
-    costPerRequest: 0.01,
-    costPerSuccessfulContact: 0,
-    dailyLimit: 20,
-    monthlyLimit: 300,
-  },
-  {
     provider: "apollo",
     enabled: true,
-    priority: 2,
+    priority: 1,
     costPerRequest: 0.02,
     costPerSuccessfulContact: 0.05,
     dailyLimit: 20,
@@ -22,9 +13,18 @@ export const DEFAULT_PROVIDER_CONFIGS: ProviderConfigInput[] = [
   {
     provider: "hunter",
     enabled: true,
-    priority: 3,
+    priority: 2,
     costPerRequest: 0.01,
     costPerSuccessfulContact: 0.03,
+    dailyLimit: 20,
+    monthlyLimit: 300,
+  },
+  {
+    provider: "ninjapear",
+    enabled: true,
+    priority: 3,
+    costPerRequest: 0.03,
+    costPerSuccessfulContact: 0,
     dailyLimit: 20,
     monthlyLimit: 300,
   },

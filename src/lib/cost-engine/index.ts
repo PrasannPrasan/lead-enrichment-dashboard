@@ -3,6 +3,31 @@ import type { ProviderConfigInput } from "@/lib/types";
 import { DEFAULT_PROVIDER_CONFIGS } from "@/lib/cost-engine/defaults";
 
 export async function ensureDefaultProviderConfigs() {
+  const legacyProxycurl = await prisma.providerConfig.findUnique({
+    where: { provider: "proxycurl" },
+  });
+  const existingNinjaPear = await prisma.providerConfig.findUnique({
+    where: { provider: "ninjapear" },
+  });
+
+  if (legacyProxycurl && !existingNinjaPear) {
+    await prisma.providerConfig.update({
+      where: { provider: "proxycurl" },
+      data: {
+        provider: "ninjapear",
+        priority: 3,
+        costPerRequest: legacyProxycurl.costPerRequest || 0.03,
+      },
+    });
+  } else if (legacyProxycurl && existingNinjaPear) {
+    await prisma.providerConfig.update({
+      where: { provider: "proxycurl" },
+      data: {
+        enabled: false,
+      },
+    });
+  }
+
   await Promise.all(
     DEFAULT_PROVIDER_CONFIGS.map((config) =>
       prisma.providerConfig.upsert({

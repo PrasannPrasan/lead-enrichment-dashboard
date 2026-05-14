@@ -19,6 +19,7 @@ type EnrichResponse = {
     provider: string;
     endpoint: string;
     success: boolean;
+    responseSummary: Record<string, unknown>;
     fieldsReturned: string[];
     cost: number;
     error?: string | null;
@@ -42,6 +43,28 @@ function confidenceVariant(score?: number) {
   if ((score ?? 0) >= 85) return "success";
   if ((score ?? 0) >= 60) return "warning";
   return "destructive";
+}
+
+function providerRunStatus(log: EnrichResponse["logs"][number]) {
+  if (log.success) {
+    return {
+      label: "Success",
+      variant: "success" as const,
+    };
+  }
+
+  const error = log.error?.toLowerCase() ?? "";
+  const skipped =
+    log.endpoint === "skipped" ||
+    log.endpoint === "budget-guardrail" ||
+    log.responseSummary?.skipped === true ||
+    error.includes("skipped") ||
+    error.includes("not configured");
+
+  return {
+    label: skipped ? "Skipped" : "Failed",
+    variant: skipped ? ("warning" as const) : ("destructive" as const),
+  };
 }
 
 function FieldMeta({ lead, field }: { lead: SerializedLead; field: LeadField }) {
@@ -240,15 +263,19 @@ export function HomeDashboard() {
                   </TableHeader>
                   <TableBody>
                     {result.logs.length ? (
-                      result.logs.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="font-medium">{log.provider}</TableCell>
-                          <TableCell>
-                            <Badge variant={log.success ? "success" : "destructive"}>{log.success ? "Success" : "Skipped/Failed"}</Badge>
-                          </TableCell>
-                          <TableCell>{formatCurrency(log.cost)}</TableCell>
-                        </TableRow>
-                      ))
+                      result.logs.map((log) => {
+                        const status = providerRunStatus(log);
+
+                        return (
+                          <TableRow key={log.id}>
+                            <TableCell className="font-medium">{log.provider}</TableCell>
+                            <TableCell>
+                              <Badge variant={status.variant}>{status.label}</Badge>
+                            </TableCell>
+                            <TableCell>{formatCurrency(log.cost)}</TableCell>
+                          </TableRow>
+                        );
+                      })
                     ) : (
                       <TableRow>
                         <TableCell colSpan={3} className="text-muted-foreground">

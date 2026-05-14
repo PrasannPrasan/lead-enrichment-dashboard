@@ -50,6 +50,28 @@ const EMPTY_CONFIG: ProviderConfigInput = {
   monthlyLimit: null,
 };
 
+function providerRunStatus(log: ProviderLog) {
+  if (log.success) {
+    return {
+      label: "Success",
+      variant: "success" as const,
+    };
+  }
+
+  const error = log.error?.toLowerCase() ?? "";
+  const skipped =
+    log.endpoint === "skipped" ||
+    log.endpoint === "budget-guardrail" ||
+    log.responseSummary?.skipped === true ||
+    error.includes("skipped") ||
+    error.includes("not configured");
+
+  return {
+    label: skipped ? "Skipped" : "Failed",
+    variant: skipped ? ("warning" as const) : ("destructive" as const),
+  };
+}
+
 export function AdminDashboard() {
   const [configs, setConfigs] = useState<ProviderConfig[]>([]);
   const [logs, setLogs] = useState<ProviderLog[]>([]);
@@ -444,24 +466,28 @@ export function AdminDashboard() {
             </TableHeader>
             <TableBody>
               {logs.length ? (
-                logs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-medium">{log.provider}</TableCell>
-                    <TableCell>
-                      <Badge variant={log.success ? "success" : "destructive"}>{log.success ? "Success" : "Failed"}</Badge>
-                    </TableCell>
-                    <TableCell>{log.fieldsReturned.length ? log.fieldsReturned.join(", ") : "None"}</TableCell>
-                    <TableCell>{formatCurrency(log.cost)}</TableCell>
-                    <TableCell className="max-w-[280px] truncate text-xs text-muted-foreground">{log.error ?? "None"}</TableCell>
-                    <TableCell>{formatDate(log.createdAt)}</TableCell>
-                    <TableCell>
-                      <Button size="sm" variant="outline" onClick={() => void retryLookup(log)} disabled={savingId === log.id}>
-                        {savingId === log.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
-                        Retry
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                logs.map((log) => {
+                  const status = providerRunStatus(log);
+
+                  return (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-medium">{log.provider}</TableCell>
+                      <TableCell>
+                        <Badge variant={status.variant}>{status.label}</Badge>
+                      </TableCell>
+                      <TableCell>{log.fieldsReturned.length ? log.fieldsReturned.join(", ") : "None"}</TableCell>
+                      <TableCell>{formatCurrency(log.cost)}</TableCell>
+                      <TableCell className="max-w-[280px] truncate text-xs text-muted-foreground">{log.error ?? "None"}</TableCell>
+                      <TableCell>{formatDate(log.createdAt)}</TableCell>
+                      <TableCell>
+                        <Button size="sm" variant="outline" onClick={() => void retryLookup(log)} disabled={savingId === log.id}>
+                          {savingId === log.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
+                          Retry
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} className="text-muted-foreground">
