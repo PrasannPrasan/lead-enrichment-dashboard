@@ -95,9 +95,13 @@ export async function enrichLead(input: string, options: { forceRefresh?: boolea
       },
     }));
 
-  let current: LeadEnrichment = cached ? leadToEnrichment(cached) : {};
-  let confidence: ConfidenceMap = cached && cached.confidence && typeof cached.confidence === "object" ? (cached.confidence as ConfidenceMap) : {};
-  let sources: SourceMap = cached && cached.sources && typeof cached.sources === "object" ? (cached.sources as SourceMap) : {};
+  let current: LeadEnrichment = cached && !options.forceRefresh ? leadToEnrichment(cached) : {};
+  let confidence: ConfidenceMap =
+    cached && !options.forceRefresh && cached.confidence && typeof cached.confidence === "object"
+      ? (cached.confidence as ConfidenceMap)
+      : {};
+  let sources: SourceMap =
+    cached && !options.forceRefresh && cached.sources && typeof cached.sources === "object" ? (cached.sources as SourceMap) : {};
   let totalCost = options.forceRefresh ? 0 : lead.totalCost;
   const logs = [];
   const skippedDueToBudget: string[] = [];

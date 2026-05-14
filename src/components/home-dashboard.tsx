@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, CircleDollarSign, Loader2, Search, ShieldCheck } from "lucide-react";
+import { AlertCircle, CheckCircle2, CircleDollarSign, Loader2, RefreshCw, Search, ShieldCheck } from "lucide-react";
 
 import type { LeadField, SerializedLead } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -75,6 +75,7 @@ function LeadFieldRow({ lead, field, value }: { lead: SerializedLead; field: Lea
 export function HomeDashboard() {
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forceRefresh, setForceRefresh] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<EnrichResponse | null>(null);
 
@@ -90,7 +91,7 @@ export function HomeDashboard() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ linkedinUrl }),
+        body: JSON.stringify({ linkedinUrl, forceRefresh }),
       });
       const payload = await response.json();
 
@@ -121,7 +122,7 @@ export function HomeDashboard() {
           </CardHeader>
           <CardContent>
             <form className="grid gap-4 md:grid-cols-[1fr_auto]" onSubmit={handleSubmit}>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="linkedinUrl">LinkedIn Profile URL</Label>
                 <Input
                   id="linkedinUrl"
@@ -130,11 +131,26 @@ export function HomeDashboard() {
                   onChange={(event) => setLinkedinUrl(event.target.value)}
                   required
                 />
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-primary"
+                    checked={forceRefresh}
+                    onChange={(event) => setForceRefresh(event.target.checked)}
+                  />
+                  Ignore cache and call providers (admin only)
+                </label>
               </div>
               <div className="flex items-end">
                 <Button type="submit" className="w-full md:w-auto" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-                  Enrich
+                  {loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : forceRefresh ? (
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Search className="mr-2 h-4 w-4" />
+                  )}
+                  {forceRefresh ? "Refresh" : "Enrich"}
                 </Button>
               </div>
             </form>
