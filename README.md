@@ -2,6 +2,14 @@
 
 A production-minded MVP for LinkedIn lead enrichment with a server-side provider waterfall, PostgreSQL cache, admin cost controls, and protected lookup history.
 
+## Live Deployment
+
+- App: https://learn-tau-three.vercel.app
+- Health check: https://learn-tau-three.vercel.app/api/health
+- Repository: https://github.com/PrasannPrasan/lead-enrichment-dashboard
+- Hosting: Vercel
+- Database: Supabase Postgres via pooler connection
+
 ## Stack
 
 - Next.js 15 App Router
@@ -118,12 +126,13 @@ npm run prisma:deploy
 6. Deploy with the default build command: `npm run build`.
 7. Verify `https://your-app.vercel.app/api/health` returns `{"ok":true,"database":"connected"}`.
 
-## AWS-Ready Architecture
+## Hosting Architecture
 
-The app keeps provider calls behind route handlers, stores state in PostgreSQL, and keeps secrets in environment variables. The same structure can move to AWS Amplify, ECS/Fargate, or Lambda behind API Gateway with RDS PostgreSQL by replacing Vercel hosting and updating `DATABASE_URL`.
+The app is currently hosted on Vercel and uses Supabase Postgres. Provider calls stay behind server-side route handlers, state lives in PostgreSQL, and secrets are configured as Vercel environment variables. No AWS hosting is used for the current deployment.
 
 ## Limitations
 
 - Rate limiting is in-memory for MVP simplicity. Use Redis, Upstash, or an API gateway limiter for multi-instance production deployments.
 - Provider mappings are intentionally conservative and should be verified against paid account response payloads.
 - Password auth uses `ADMIN_PASSWORD` from env for speed of shipping. Use hashed credentials or an identity provider for larger teams.
+- The Vercel project was deployed through the CLI. Connect the GitHub repository in Vercel dashboard if you want automatic redeploys on every push.
