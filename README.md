@@ -85,6 +85,7 @@ The initial migration is checked in at `prisma/migrations/20260514000000_init/mi
 - `GET /api/leads`
 - `GET /api/leads/[id]`
 - `GET /api/cost-summary`
+- `GET /api/health`
 - `GET /api/provider-logs`
 - `GET /api/admin/provider-config`
 - `POST /api/admin/provider-config`
@@ -103,11 +104,19 @@ Twilio is only used to validate a phone number that an enrichment provider alrea
 
 ## Deploying to Vercel
 
-1. Push this repository to GitHub.
-2. Import the GitHub repo in Vercel.
-3. Set the environment variables from `.env.example`.
-4. Use the default build command: `npm run build`.
-5. Run database migrations with `npm run prisma:deploy` before the first production request.
+1. Create a Supabase project and copy its PostgreSQL connection string.
+2. Run the migration against Supabase:
+
+```bash
+$env:DATABASE_URL="postgresql://..."
+npm run prisma:deploy
+```
+
+3. Import the GitHub repo in Vercel.
+4. Set the environment variables from `.env.example` in Vercel Project Settings.
+5. Set `NEXTAUTH_URL` to the final Vercel production URL.
+6. Deploy with the default build command: `npm run build`.
+7. Verify `https://your-app.vercel.app/api/health` returns `{"ok":true,"database":"connected"}`.
 
 ## AWS-Ready Architecture
 
