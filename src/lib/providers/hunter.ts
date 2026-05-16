@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getProviderApiKey } from "@/lib/integrations/credentials";
 import type { ProviderLookupContext, ProviderLookupResult } from "@/lib/types";
 import {
   calculateConfiguredCost,
@@ -37,7 +38,7 @@ function splitName(fullName?: string | null) {
 }
 
 export async function lookupHunter(context: ProviderLookupContext): Promise<ProviderLookupResult> {
-  const apiKey = process.env.HUNTER_API_KEY;
+  const apiKey = await getProviderApiKey("hunter");
   const endpoint = "https://api.hunter.io/v2/email-finder";
 
   if (!apiKey) {

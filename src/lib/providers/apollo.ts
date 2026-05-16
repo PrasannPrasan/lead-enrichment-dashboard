@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getProviderApiKey } from "@/lib/integrations/credentials";
 import type { ProviderLookupContext, ProviderLookupResult } from "@/lib/types";
 import {
   calculateConfiguredCost,
@@ -21,7 +22,7 @@ type ApolloPerson = {
 };
 
 export async function lookupApollo(context: ProviderLookupContext): Promise<ProviderLookupResult> {
-  const apiKey = process.env.APOLLO_API_KEY;
+  const apiKey = await getProviderApiKey("apollo");
   const endpoint = "https://api.apollo.io/api/v1/people/match";
 
   if (!apiKey) {

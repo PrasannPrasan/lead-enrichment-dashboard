@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getProviderApiKey } from "@/lib/integrations/credentials";
 import type { ProviderLookupContext, ProviderLookupResult, WorkHistoryItem } from "@/lib/types";
 import {
   calculateConfiguredCost,
@@ -40,7 +41,7 @@ function mapExperience(experience?: PdlProfile["experience"]): WorkHistoryItem[]
 }
 
 export async function lookupPdl(context: ProviderLookupContext): Promise<ProviderLookupResult> {
-  const apiKey = process.env.PDL_API_KEY;
+  const apiKey = await getProviderApiKey("pdl");
   const endpoint = "https://api.peopledatalabs.com/v5/person/enrich";
 
   if (!apiKey) {

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getProviderApiKey } from "@/lib/integrations/credentials";
 import type { LeadEnrichment, ProviderLookupContext, ProviderLookupResult, WorkHistoryItem } from "@/lib/types";
 import {
   calculateConfiguredCost,
@@ -103,7 +104,7 @@ function buildProfileParams(current: LeadEnrichment) {
 }
 
 export async function lookupNinjaPear(context: ProviderLookupContext): Promise<ProviderLookupResult> {
-  const apiKey = process.env.NINJAPEAR_API_KEY || process.env.PROXYCURL_API_KEY;
+  const apiKey = await getProviderApiKey("ninjapear");
   const endpoint = "https://nubela.co/api/v1/employee/profile";
 
   if (!apiKey) {

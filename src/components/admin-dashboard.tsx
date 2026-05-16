@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Loader2, Plus, RotateCcw, Save, Settings } from "lucide-react";
+import { Activity, KeyRound, Loader2, Plus, RotateCcw, Save, Settings } from "lucide-react";
+import Link from "next/link";
 
 import type { ProviderConfigInput } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -237,10 +238,24 @@ export function AdminDashboard() {
           <h1 className="text-2xl font-semibold tracking-normal">Admin Dashboard</h1>
           <p className="text-sm text-muted-foreground">Manage provider priority, budget limits, call costs, and retry failed enrichment.</p>
         </div>
-        <Button variant="outline" onClick={() => void loadAdminData()} disabled={loading}>
-          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Settings className="mr-2 h-4 w-4" />}
-          Refresh
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/admin/settings">
+              <KeyRound className="mr-2 h-4 w-4" />
+              API Settings
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/admin/diagnostics">
+              <Activity className="mr-2 h-4 w-4" />
+              Diagnostics
+            </Link>
+          </Button>
+          <Button variant="outline" onClick={() => void loadAdminData()} disabled={loading}>
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Settings className="mr-2 h-4 w-4" />}
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {error ? <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}

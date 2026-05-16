@@ -60,3 +60,19 @@ model ProviderConfig {
 
   @@index([enabled, priority])
 }
+
+model ApiCredential {
+  id              String    @id @default(cuid())
+  provider        String    @unique
+  encryptedValue  String?
+  iv              String?
+  authTag         String?
+  keyHint         String?
+  status          String    @default("not_configured")
+  lastError       String?
+  lastValidatedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([status])
+}
