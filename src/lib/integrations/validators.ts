@@ -74,6 +74,43 @@ async function requestValidation(url: string, init: RequestInit, timeoutMs = 120
   }
 }
 
+async function validatePdlKey(apiKey: string): Promise<ValidationResult> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+
+  try {
+    const response = await fetch("https://api.peopledatalabs.com/v5/person/enrich", {
+      signal: controller.signal,
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        "X-Api-Key": apiKey,
+      },
+    });
+
+    if (response.ok || response.status === 400) {
+      return {
+        valid: true,
+        error: null,
+      };
+    }
+
+    const summary = await parseResponseSummary(response);
+
+    return {
+      valid: false,
+      error: summary ? `HTTP ${response.status}: ${summary}` : `HTTP ${response.status}: API key validation failed`,
+    };
+  } catch (error) {
+    return {
+      valid: false,
+      error: error instanceof Error ? error.message : "People Data Labs key validation request failed",
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function validateIntegrationKey(provider: ManagedIntegrationProvider, apiKey: string): Promise<ValidationResult> {
   switch (provider) {
     case "apollo":
@@ -100,11 +137,6 @@ export async function validateIntegrationKey(provider: ManagedIntegrationProvide
       });
 
     case "pdl":
-      return requestValidation("https://api.peopledatalabs.com/v5/person/enrich", {
-        method: "HEAD",
-        headers: {
-          "X-Api-Key": apiKey,
-        },
-      });
+      return validatePdlKey(apiKey);
   }
 }
