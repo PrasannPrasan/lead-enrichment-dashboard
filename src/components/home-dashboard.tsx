@@ -47,6 +47,13 @@ function confidenceVariant(score?: number) {
 
 function providerRunStatus(log: EnrichResponse["logs"][number]) {
   if (log.success) {
+    if (!log.fieldsReturned.length) {
+      return {
+        label: "No data",
+        variant: "warning" as const,
+      };
+    }
+
     return {
       label: "Success",
       variant: "success" as const,
@@ -258,6 +265,7 @@ export function HomeDashboard() {
                     <TableRow>
                       <TableHead>Provider</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Fields</TableHead>
                       <TableHead>Cost</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -272,13 +280,14 @@ export function HomeDashboard() {
                             <TableCell>
                               <Badge variant={status.variant}>{status.label}</Badge>
                             </TableCell>
+                            <TableCell>{log.fieldsReturned.length ? log.fieldsReturned.join(", ") : "None"}</TableCell>
                             <TableCell>{formatCurrency(log.cost)}</TableCell>
                           </TableRow>
                         );
                       })
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-muted-foreground">
+                        <TableCell colSpan={4} className="text-muted-foreground">
                           Served from cache with no provider calls.
                         </TableCell>
                       </TableRow>

@@ -53,6 +53,13 @@ const EMPTY_CONFIG: ProviderConfigInput = {
 
 function providerRunStatus(log: ProviderLog) {
   if (log.success) {
+    if (!log.fieldsReturned.length) {
+      return {
+        label: "No data",
+        variant: "warning" as const,
+      };
+    }
+
     return {
       label: "Success",
       variant: "success" as const,

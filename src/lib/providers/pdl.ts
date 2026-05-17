@@ -95,22 +95,29 @@ export async function lookupPdl(context: ProviderLookupContext): Promise<Provide
       phones: payload.phone_numbers ?? [],
       workHistory: mapExperience(payload.experience),
     };
+    const fieldsReturned = [
+      data.fullName ? "fullName" : null,
+      data.currentCompany ? "currentCompany" : null,
+      data.currentDesignation ? "currentDesignation" : null,
+      data.emails.length ? "emails" : null,
+      data.phones.length ? "phones" : null,
+      data.workHistory.length ? "workHistory" : null,
+    ].filter(Boolean) as ProviderLookupResult["fieldsReturned"];
+    const hasUsableFields = fieldsReturned.length > 0;
 
     return {
       provider: "pdl",
       endpoint,
-      success: true,
+      success: hasUsableFields,
       data,
-      fieldsReturned: [
-        data.fullName ? "fullName" : null,
-        data.currentCompany ? "currentCompany" : null,
-        data.currentDesignation ? "currentDesignation" : null,
-        data.emails.length ? "emails" : null,
-        data.phones.length ? "phones" : null,
-        data.workHistory.length ? "workHistory" : null,
-      ].filter(Boolean) as ProviderLookupResult["fieldsReturned"],
+      fieldsReturned,
       requestSummary: { linkedinUrl: context.linkedinUrl },
-      responseSummary: { emailCount: emails.length, phoneCount: data.phones.length, experienceCount: data.workHistory.length },
+      responseSummary: {
+        emailCount: emails.length,
+        phoneCount: data.phones.length,
+        experienceCount: data.workHistory.length,
+        hasUsableFields,
+      },
       confidence: {
         fullName: 60,
         currentCompany: 60,
@@ -120,6 +127,7 @@ export async function lookupPdl(context: ProviderLookupContext): Promise<Provide
         workHistory: 60,
       },
       cost: calculateConfiguredCost(context.config, data),
+      error: hasUsableFields ? undefined : "People Data Labs returned no usable lead fields for this profile",
     };
   } catch (error) {
     return {
