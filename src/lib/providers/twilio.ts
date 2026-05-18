@@ -29,11 +29,7 @@ export async function lookupTwilio(context: ProviderLookupContext): Promise<Prov
     };
   }
 
-  if (!accountSid || !authToken) {
-    if (!isMockMode()) {
-      return missingApiKey("twilio", "TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN", endpoint);
-    }
-
+  if (isMockMode(context.enrichmentMode)) {
     const data = { phones: [phone] };
     return {
       provider: "twilio",
@@ -44,8 +40,12 @@ export async function lookupTwilio(context: ProviderLookupContext): Promise<Prov
       requestSummary: { phone, mode: "mock" },
       responseSummary: { valid: true },
       confidence: { phones: 95 },
-      cost: calculateConfiguredCost(context.config, data),
+      cost: 0,
     };
+  }
+
+  if (!accountSid || !authToken) {
+    return missingApiKey("twilio", "TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN", endpoint);
   }
 
   try {

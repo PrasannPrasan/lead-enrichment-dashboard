@@ -9,6 +9,8 @@ export type ProviderName =
   | "snov"
   | "findymail";
 
+export type EnrichmentMode = "live" | "mock";
+
 export type LeadField =
   | "fullName"
   | "currentCompany"
@@ -53,6 +55,7 @@ export type ProviderLookupContext = {
   linkedinUrl: string;
   leadId: string;
   current: LeadEnrichment;
+  enrichmentMode?: EnrichmentMode;
   config: ProviderConfigInput;
 };
 

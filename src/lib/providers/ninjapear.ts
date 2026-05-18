@@ -104,14 +104,9 @@ function buildProfileParams(current: LeadEnrichment) {
 }
 
 export async function lookupNinjaPear(context: ProviderLookupContext): Promise<ProviderLookupResult> {
-  const apiKey = await getProviderApiKey("ninjapear");
   const endpoint = "https://nubela.co/api/v1/employee/profile";
 
-  if (!apiKey) {
-    if (!isMockMode()) {
-      return missingApiKey("ninjapear", "NINJAPEAR_API_KEY/PROXYCURL_API_KEY", endpoint);
-    }
-
+  if (isMockMode(context.enrichmentMode)) {
     const identity = demoIdentityFromLinkedIn(context.linkedinUrl);
     const data = {
       fullName: identity.fullName,
@@ -136,8 +131,14 @@ export async function lookupNinjaPear(context: ProviderLookupContext): Promise<P
         totalYearsExperience: 85,
         workHistory: 85,
       },
-      cost: calculateConfiguredCost(context.config, data),
+      cost: 0,
     };
+  }
+
+  const apiKey = await getProviderApiKey("ninjapear");
+
+  if (!apiKey) {
+    return missingApiKey("ninjapear", "NINJAPEAR_API_KEY/PROXYCURL_API_KEY", endpoint);
   }
 
   const params = buildProfileParams(context.current);

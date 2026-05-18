@@ -8,6 +8,7 @@ import { hasGoodEnoughLead, legalContactReturned, mergeProviderResult } from "@/
 import { prisma } from "@/lib/prisma";
 import { PROVIDER_ADAPTERS } from "@/lib/providers";
 import { serializeLead, serializeProviderLog } from "@/lib/serializers";
+import { getEnrichmentMode } from "@/lib/settings/enrichment-mode";
 import type { ConfidenceMap, LeadEnrichment, ProviderConfigInput, ProviderName, SourceMap } from "@/lib/types";
 
 const linkedinUrlSchema = z
@@ -71,12 +72,14 @@ async function logSkippedProvider(leadId: string, config: ProviderConfigInput, e
 
 export async function enrichLead(input: string, options: { forceRefresh?: boolean } = {}) {
   const linkedinUrl = normalizeLinkedInUrl(input);
+  const enrichmentMode = await getEnrichmentMode();
+  const forceMock = enrichmentMode === "mock";
 
   const cached = await prisma.lead.findUnique({
     where: { linkedinUrl },
   });
 
-  if (cached && !options.forceRefresh && (cached.fullName || (Array.isArray(cached.emails) && cached.emails.length > 0))) {
+  if (cached && !forceMock && !options.forceRefresh && (cached.fullName || (Array.isArray(cached.emails) && cached.emails.length > 0))) {
     return {
       lead: serializeLead(cached, true),
       logs: [],
@@ -95,14 +98,14 @@ export async function enrichLead(input: string, options: { forceRefresh?: boolea
       },
     }));
 
-  let current: LeadEnrichment = cached && !options.forceRefresh ? leadToEnrichment(cached) : {};
+  let current: LeadEnrichment = cached && !forceMock && !options.forceRefresh ? leadToEnrichment(cached) : {};
   let confidence: ConfidenceMap =
-    cached && !options.forceRefresh && cached.confidence && typeof cached.confidence === "object"
+    cached && !forceMock && !options.forceRefresh && cached.confidence && typeof cached.confidence === "object"
       ? (cached.confidence as ConfidenceMap)
       : {};
   let sources: SourceMap =
-    cached && !options.forceRefresh && cached.sources && typeof cached.sources === "object" ? (cached.sources as SourceMap) : {};
-  let totalCost = options.forceRefresh ? 0 : lead.totalCost;
+    cached && !forceMock && !options.forceRefresh && cached.sources && typeof cached.sources === "object" ? (cached.sources as SourceMap) : {};
+  let totalCost = options.forceRefresh || forceMock ? 0 : lead.totalCost;
   const logs = [];
   const skippedDueToBudget: string[] = [];
 
@@ -120,37 +123,40 @@ export async function enrichLead(input: string, options: { forceRefresh?: boolea
       continue;
     }
 
-    const expectedCost = config.costPerRequest + config.costPerSuccessfulContact;
-    const budget = await isWithinBudget(config, expectedCost);
+    if (!forceMock) {
+      const expectedCost = config.costPerRequest + config.costPerSuccessfulContact;
+      const budget = await isWithinBudget(config, expectedCost);
 
-    if (!budget.allowed) {
-      skippedDueToBudget.push(config.provider);
-      const log = await prisma.providerLog.create({
-        data: {
-          leadId: lead.id,
-          provider: config.provider,
-          endpoint: "budget-guardrail",
-          success: false,
-          requestSummary: { linkedinUrl, expectedCost },
-          responseSummary: {
-            dailySpend: budget.dailySpend,
-            monthlySpend: budget.monthlySpend,
-            dailyLimit: config.dailyLimit,
-            monthlyLimit: config.monthlyLimit,
+      if (!budget.allowed) {
+        skippedDueToBudget.push(config.provider);
+        const log = await prisma.providerLog.create({
+          data: {
+            leadId: lead.id,
+            provider: config.provider,
+            endpoint: "budget-guardrail",
+            success: false,
+            requestSummary: { linkedinUrl, expectedCost },
+            responseSummary: {
+              dailySpend: budget.dailySpend,
+              monthlySpend: budget.monthlySpend,
+              dailyLimit: config.dailyLimit,
+              monthlyLimit: config.monthlyLimit,
+            },
+            fieldsReturned: [] as Prisma.InputJsonValue,
+            cost: 0,
+            error: budget.reason ?? "Provider skipped due to budget",
           },
-          fieldsReturned: [] as Prisma.InputJsonValue,
-          cost: 0,
-          error: budget.reason ?? "Provider skipped due to budget",
-        },
-      });
-      logs.push(serializeProviderLog(log));
-      continue;
+        });
+        logs.push(serializeProviderLog(log));
+        continue;
+      }
     }
 
     const result = await adapter({
       linkedinUrl,
       leadId: lead.id,
       current,
+      enrichmentMode,
       config,
     });
     const log = await logProviderResult(lead.id, result);

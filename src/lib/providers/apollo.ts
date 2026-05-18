@@ -22,14 +22,9 @@ type ApolloPerson = {
 };
 
 export async function lookupApollo(context: ProviderLookupContext): Promise<ProviderLookupResult> {
-  const apiKey = await getProviderApiKey("apollo");
   const endpoint = "https://api.apollo.io/api/v1/people/match";
 
-  if (!apiKey) {
-    if (!isMockMode()) {
-      return missingApiKey("apollo", "APOLLO_API_KEY", endpoint);
-    }
-
+  if (isMockMode(context.enrichmentMode)) {
     const identity = demoIdentityFromLinkedIn(context.linkedinUrl);
     const data = {
       fullName: context.current.fullName ?? identity.fullName,
@@ -52,8 +47,14 @@ export async function lookupApollo(context: ProviderLookupContext): Promise<Prov
         currentDesignation: 75,
         emails: 60,
       },
-      cost: calculateConfiguredCost(context.config, data),
+      cost: 0,
     };
+  }
+
+  const apiKey = await getProviderApiKey("apollo");
+
+  if (!apiKey) {
+    return missingApiKey("apollo", "APOLLO_API_KEY", endpoint);
   }
 
   try {

@@ -41,14 +41,9 @@ function mapExperience(experience?: PdlProfile["experience"]): WorkHistoryItem[]
 }
 
 export async function lookupPdl(context: ProviderLookupContext): Promise<ProviderLookupResult> {
-  const apiKey = await getProviderApiKey("pdl");
   const endpoint = "https://api.peopledatalabs.com/v5/person/enrich";
 
-  if (!apiKey) {
-    if (!isMockMode()) {
-      return missingApiKey("pdl", "PDL_API_KEY", endpoint);
-    }
-
+  if (isMockMode(context.enrichmentMode)) {
     const identity = demoIdentityFromLinkedIn(context.linkedinUrl);
     const data = {
       fullName: context.current.fullName ?? identity.fullName,
@@ -73,8 +68,14 @@ export async function lookupPdl(context: ProviderLookupContext): Promise<Provide
         emails: 60,
         workHistory: 60,
       },
-      cost: calculateConfiguredCost(context.config, data),
+      cost: 0,
     };
+  }
+
+  const apiKey = await getProviderApiKey("pdl");
+
+  if (!apiKey) {
+    return missingApiKey("pdl", "PDL_API_KEY", endpoint);
   }
 
   try {

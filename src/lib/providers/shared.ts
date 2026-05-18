@@ -1,9 +1,13 @@
 import "server-only";
 
-import type { LeadEnrichment, ProviderConfigInput, ProviderLookupResult, ProviderName, WorkHistoryItem } from "@/lib/types";
+import type { EnrichmentMode, LeadEnrichment, ProviderConfigInput, ProviderLookupResult, ProviderName, WorkHistoryItem } from "@/lib/types";
 import { toTitleCase } from "@/lib/utils";
 
-export function isMockMode() {
+export function isMockMode(mode?: EnrichmentMode) {
+  if (mode) {
+    return mode === "mock";
+  }
+
   return process.env.MOCK_PROVIDER_MODE === "true";
 }
 

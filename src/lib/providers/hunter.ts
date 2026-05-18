@@ -38,14 +38,9 @@ function splitName(fullName?: string | null) {
 }
 
 export async function lookupHunter(context: ProviderLookupContext): Promise<ProviderLookupResult> {
-  const apiKey = await getProviderApiKey("hunter");
   const endpoint = "https://api.hunter.io/v2/email-finder";
 
-  if (!apiKey) {
-    if (!isMockMode()) {
-      return missingApiKey("hunter", "HUNTER_API_KEY", endpoint);
-    }
-
+  if (isMockMode(context.enrichmentMode)) {
     const identity = demoIdentityFromLinkedIn(context.linkedinUrl);
     const email = context.current.emails?.[0] ?? `${identity.first}.${identity.last}@${identity.domain}`.toLowerCase();
     const data = {
@@ -63,8 +58,14 @@ export async function lookupHunter(context: ProviderLookupContext): Promise<Prov
       confidence: {
         emails: 95,
       },
-      cost: calculateConfiguredCost(context.config, data),
+      cost: 0,
     };
+  }
+
+  const apiKey = await getProviderApiKey("hunter");
+
+  if (!apiKey) {
+    return missingApiKey("hunter", "HUNTER_API_KEY", endpoint);
   }
 
   try {
